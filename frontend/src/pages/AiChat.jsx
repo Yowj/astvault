@@ -34,7 +34,7 @@ export default function AiChat() {
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleAskAi();
+      handleAskAi();  
     }
   };
 
