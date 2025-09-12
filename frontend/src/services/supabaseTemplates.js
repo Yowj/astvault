@@ -35,7 +35,6 @@ export const supabaseTemplatesAPI = {
       .eq("id", user.id)
       .single();
 
-
     const { data, error } = await supabase
       .from("templates")
       .insert([
@@ -175,58 +174,12 @@ export const supabaseTemplatesAPI = {
 
   // Grammar enhance
   grammarEnhance: async (input) => {
-    if (!input) throw new Error("No input provided");
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "qwen/qwen-2.5-72b-instruct:free",
-        messages: [
-          {
-            role: "user",
-            content: `Support Message Improver
-Instructions:
-Fix and improve the following support message. Make it sound natural and friendly while being clear and helpful.
-What to improve:
-
-Fix grammar and spelling mistakes
-Replace Tagalog words with English
-Improve sentence flow and structure
-Make it easier to understand
-Keep it conversational but professional
-Remove contractions (use "cannot" instead of "can't")
-
-What NOT to do:
-
-Do not make it too formal or robotic
-Do not add extra information or footnotes
-Do not change the main message or add new content
-Do not use overly fancy words
-
-Output:
-Just give me the improved version, nothing else.
-Text to improve:
-"${input}"`,
-          },
-        ],
-      }),
+    const { data, error } = await supabase.functions.invoke("grammar-enhancer-edge", {
+      body: { input },
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Grammar enhancement failed: ${response.status} - ${errorText}`);
+    if (error) {
+      throw new Error(`Grammar enhancement failed: ${error.message}`);
     }
-
-    const data = await response.json();
-
-    if (!data.choices || !data.choices[0]?.message?.content) {
-      throw new Error("Invalid AI response from OpenRouter");
-    }
-
-    return { aiResponse: data.choices[0].message.content };
+    return data;
   },
 };

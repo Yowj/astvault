@@ -19,7 +19,7 @@ const Ai = () => {
 
     try {
       const response = await supabaseTemplatesAPI.grammarEnhance(input);
-      const cleanedResponse = cleanResponse(response?.aiResponse);
+      const cleanedResponse = cleanResponse(response?.improved_text);
       setOutput(cleanedResponse);
       toast.success("Grammar enhanced successfully");
     } catch (error) {
