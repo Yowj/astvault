@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import useSignUp from "../../hooks/useSignUp";
+import { motion } from "framer-motion";
+import useSignUp from "../hooks/useSignUp";
 
 const Signup = () => {
   const { signUpMutation, isPending } = useSignUp();

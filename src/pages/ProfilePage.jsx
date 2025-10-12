@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Camera, Mail, User, Edit2 } from "lucide-react";
-import { supabase, updateUserMetadata } from "../../services";
+import { supabase, updateUserMetadata } from "../services";
 import toast from "react-hot-toast";
-import useAuthUser from "../../hooks/useAuthUser";
+import useAuthUser from "../hooks/useAuthUser";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ProfilePage = () => {
