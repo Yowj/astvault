@@ -20,7 +20,7 @@ export const getAuthUser = async () => {
 
     const profile = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, profile_picture")
       .eq("id", session.user.id)
       .single();
 
@@ -29,6 +29,7 @@ export const getAuthUser = async () => {
         id: session.user.id,
         email: session.user.email,
         fullName: profile?.data?.full_name || null,
+        profilePicture: profile?.data?.profile_picture || null,
         ...session.user.user_metadata,
       },
     };

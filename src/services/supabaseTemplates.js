@@ -67,10 +67,10 @@ export const supabaseTemplatesAPI = {
       .eq("id", id)
       .eq("creator_id", user.id) // Ensure user can only update their own templates
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(error.message);
-    if (!data) throw new Error("Template not found or not authorized");
+    if (!data) throw new Error("You can only update your own templates");
 
     return { message: "Template updated successfully", template: data };
   },
@@ -91,7 +91,7 @@ export const supabaseTemplatesAPI = {
       .select();
 
     if (error) throw new Error(error.message);
-    if (!data || data.length === 0) throw new Error("Template not found or not authorized");
+    if (!data || data.length === 0) throw new Error("You can only delete your own templates");
 
     return { message: "Template deleted successfully" };
   },

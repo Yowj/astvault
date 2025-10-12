@@ -4,12 +4,16 @@ import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
 // eslint-disable-next-line
 import { AnimatePresence, motion } from "framer-motion";
+import useAuthUser from "../../hooks/useAuthUser";
+import { useNavigate } from "react-router";
 
 const Template = ({ title, description, id, category, creator_name }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isToggleDelete, setIsToggleDelete] = useState(false);
   const [isToggleEdit, setIsToggleEdit] = useState(false);
   const [categories, setCategories] = useState([]);
+  const { authUser } = useAuthUser();
 
   const [formData, setFormData] = useState({
     title: title,
@@ -57,11 +61,21 @@ const Template = ({ title, description, id, category, creator_name }) => {
   };
 
   const deleteToggle = () => {
-    setIsToggleDelete(!isToggleDelete);
+    if (authUser) {
+      setIsToggleDelete(!isToggleDelete);
+    } else {
+      toast.error("Please login first");
+      navigate("/login");
+    }
   };
 
   const editToggle = () => {
-    setIsToggleEdit(!isToggleEdit);
+    if (authUser) {
+      setIsToggleEdit(!isToggleEdit);
+    } else {
+      toast.error("Please login first");
+      navigate("/login");
+    }
   };
 
   const copyToClipboard = async (text) => {

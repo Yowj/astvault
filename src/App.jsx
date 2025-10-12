@@ -28,7 +28,7 @@ const App = () => {
       <Navbar />
       <main className="flex-1 relative">
         <Routes>
-          <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" />} />
           <Route path="/grammar-enhancer" element={user ? <Ai /> : <Navigate to="/login" />} />

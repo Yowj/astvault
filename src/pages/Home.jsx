@@ -7,12 +7,17 @@ import Pagination from "../components/templates/Pagination";
 import SearchBar from "../components/templates/SearchBar";
 import CategoryFilter from "../components/templates/CategoryFilter";
 import CreateButton from "../components/templates/CreateButton";
+import useAuthUser from "../hooks/useAuthUser";
+import { useNavigate } from "react-router-dom"; // ✅ Change to react-router-dom
+import toast from "react-hot-toast";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const { authUser } = useAuthUser();
 
   const { templates, templatesIsPending } = useTemplates();
 
@@ -58,6 +63,15 @@ const Home = () => {
     setCurrentPage(page);
   };
 
+  const handleClick = () => {
+    if (authUser) {
+      setIsFormOpen(true);
+    } else {
+      toast.error("Please login first");
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row bg-base-100 min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-8rem)] px-4 md:px-6 lg:px-8">
       {/* Desktop Sidebar */}
@@ -66,7 +80,8 @@ const Home = () => {
           Show All Templates
         </button>
 
-        <CreateButton onClick={() => setIsFormOpen(true)} />
+        {/* ✅ Fixed */}
+        <CreateButton onClick={handleClick} />
 
         <CategoryFilter
           categories={categories}
@@ -80,11 +95,15 @@ const Home = () => {
         {/* Mobile Header */}
         <div className="lg:hidden bg-base-200 p-2 sm:p-4 space-y-2 sm:space-y-3 border-b border-base-300">
           <div className="flex gap-2">
-            <button className="btn btn-primary btn-xs sm:btn-sm flex-1 text-xs sm:text-sm" onClick={handleClearFilters}>
+            <button
+              className="btn btn-primary btn-xs sm:btn-sm flex-1 text-xs sm:text-sm"
+              onClick={handleClearFilters}
+            >
               <span className="hidden xs:inline">All Templates</span>
               <span className="xs:hidden">All</span>
             </button>
-            <CreateButton size="sm" mobile onClick={() => setIsFormOpen(true)} />
+            {/* ✅ Fixed */}
+            <CreateButton size="sm" mobile onClick={handleClick} />
           </div>
 
           <CategoryFilter
@@ -126,7 +145,8 @@ const Home = () => {
 
       {/* Mobile FAB */}
       <div className="lg:hidden">
-        <CreateButton floating onClick={() => setIsFormOpen(true)} />
+        {/* ✅ Fixed */}
+        <CreateButton floating onClick={handleClick} />
       </div>
 
       {/* Template Form Modal */}

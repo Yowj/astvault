@@ -85,7 +85,21 @@ const Navbar = () => {
 
             {/* Right Section */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
-              {/* Theme Controller - Always visible */}
+              {/* Theme Controller and Login for non-authenticated users */}
+              {!authUser && (
+                <>
+                  <div className="hidden sm:block">
+                    <ThemeController />
+                  </div>
+                  <Link
+                    to="/login"
+                    className="hidden sm:flex btn btn-xs lg:btn-sm gap-1 lg:gap-2 btn-primary transition-all duration-200"
+                  >
+                    <User className="w-3 h-3 lg:w-4 lg:h-4" />
+                    <span className="text-xs lg:text-sm">Login</span>
+                  </Link>
+                </>
+              )}
 
               {authUser && (
                 <>
@@ -170,7 +184,7 @@ const Navbar = () => {
               <div className="divider my-2"></div>
 
               {/* Navigation Items */}
-              {navigationItems.map((item) => (
+              {authUser && navigationItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -185,6 +199,36 @@ const Navbar = () => {
                   <span className="font-medium text-sm sm:text-base">{item.label}</span>
                 </Link>
               ))}
+
+              {/* Navigation for non-authenticated users */}
+              {!authUser && (
+                <>
+                  <Link
+                    to="/"
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 ${
+                      isActiveLink("/")
+                        ? "bg-primary text-primary-content shadow-md"
+                        : "hover:bg-base-300"
+                    }`}
+                    onClick={closeMobileMenu}
+                  >
+                    <Home className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="font-medium text-sm sm:text-base">Home</span>
+                  </Link>
+                  <Link
+                    to="/login"
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 ${
+                      isActiveLink("/login")
+                        ? "bg-primary text-primary-content shadow-md"
+                        : "hover:bg-base-300"
+                    }`}
+                    onClick={closeMobileMenu}
+                  >
+                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="font-medium text-sm sm:text-base">Login</span>
+                  </Link>
+                </>
+              )}
 
               {authUser && (
                 <>

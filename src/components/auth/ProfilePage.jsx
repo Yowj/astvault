@@ -33,6 +33,9 @@ const ProfilePage = () => {
 
       if (error) throw error;
 
+      // Invalidate queries to refresh the user data
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      
       toast.success("Profile updated successfully");
       return data;
     } catch (error) {
@@ -48,15 +51,54 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
 
-    reader.readAsDataURL(file);
+    setIsUpdatingProfile(true);
 
-    reader.onload = async () => {
-      const base64Image = reader.result;
-      setSelectedImg(base64Image);
-      await updateProfile({ profile_picture: base64Image });
-    };
+    try {
+      // Create a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${authUser.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${authUser.id}/${fileName}`;
+
+      // Delete old avatar if exists
+      if (authUser?.profilePicture) {
+        const oldPath = authUser.profilePicture.split('/avatars/')[1];
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+
+      // Upload new image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with new image URL
+      await updateProfile({ profile_picture: publicUrl });
+      
+      setSelectedImg(publicUrl);
+
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error(error.message || "Failed to upload image");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
   };
 
   const handleNameUpdate = async () => {
@@ -90,13 +132,12 @@ const ProfilePage = () => {
           </div>
 
           {/* avatar upload section */}
-
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
                 src={selectedImg || authUser?.profilePicture || "/kratos.png"}
                 alt="Profile"
-                className="size-32  object-cover border-primary/80 border-5 "
+                className="size-32 rounded-full object-cover border-primary/80 border-4"
               />
               <label
                 htmlFor="avatar-upload"
@@ -193,7 +234,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="mt-6 bg-base-300 rounded-xl p-6">
-            <h2 className="text-lg font-medium  mb-4">Account Information</h2>
+            <h2 className="text-lg font-medium mb-4">Account Information</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
                 <span>Member Since</span>
@@ -210,4 +251,5 @@ const ProfilePage = () => {
     </div>
   );
 };
+
 export default ProfilePage;
