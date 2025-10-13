@@ -77,7 +77,7 @@ const Navbar = () => {
                     <span className="text-xs lg:text-sm">{item.label}</span>
                   </Link>
                 ))}
-                <div className="btn btn-xs lg:btn-sm gap-1 lg:gap-2 transition-all duration-200 btn-ghost hover:btn-outline">
+                <div>
                   <ThemeController />
                 </div>
               </div>

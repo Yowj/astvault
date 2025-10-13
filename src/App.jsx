@@ -5,8 +5,8 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import ProfilePage from "./pages/ProfilePage";
 import Home from "./pages/Home";
-import Ai from "./pages/Ai";
-import AiChat from "./pages/AiChat";
+import Ai from "./pages/Ai_grammar";
+import AiChat from "./pages/Ai_chat";
 import useAuthUser from "./hooks/useAuthUser";
 
 const App = () => {

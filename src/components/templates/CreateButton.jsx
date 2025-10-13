@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 
 const CreateButton = ({ 
   onClick, 
-  size = "md", 
   mobile = false, 
   floating = false 
 }) => {
@@ -24,7 +23,7 @@ const CreateButton = ({
   if (mobile) {
     return (
       <button
-        className={`btn btn-secondary ${size} gap-2 flex-1`}
+        className="btn btn-secondary btn-xs sm:btn-sm flex-1 text-xs sm:text-sm"
         onClick={onClick}
       >
         <Plus className="w-4 h-4" />

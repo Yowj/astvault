@@ -1,124 +1,93 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useTemplates } from "../hooks/useTemplates";
 import { usePagination } from "../hooks/usePagination";
+import useAuthUser from "../hooks/useAuthUser";
 import TemplateForm from "../components/templates/TemplateForm";
 import TemplatesContainer from "../components/templates/TemplatesContainer";
 import Pagination from "../components/templates/Pagination";
 import SearchBar from "../components/templates/SearchBar";
 import CategoryFilter from "../components/templates/CategoryFilter";
 import CreateButton from "../components/templates/CreateButton";
-import useAuthUser from "../hooks/useAuthUser";
-import { useNavigate } from "react-router-dom"; // ✅ Change to react-router-dom
-import toast from "react-hot-toast";
+
+const ITEMS_PER_PAGE = 11;
 
 const Home = () => {
   const navigate = useNavigate();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
   const { authUser } = useAuthUser();
-
   const { templates, templatesIsPending } = useTemplates();
 
-  // Filter templates based on search and category
-  const filteredTemplates = (templates || []).filter((template) => {
-    const matchesSearch =
-      !searchTerm ||
-      template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory = !selectedCategory || template.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    searchTerm: "",
+    category: "",
+    page: 1
   });
 
-  // Get unique categories from templates
-  const categories = [...new Set((templates || []).map((t) => t.category))];
-
-  // Pagination
-  const { currentItems, totalPages, pageNumbers } = usePagination(
-    filteredTemplates,
-    currentPage,
-    11
+  const categories = useMemo(
+    () => [...new Set((templates || []).map((t) => t.category))],
+    [templates]
   );
 
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("");
-    setCurrentPage(1);
-  };
+  const filteredTemplates = useMemo(() => {
+    return (templates || []).filter((template) => {
+      const matchesSearch =
+        !filters.searchTerm ||
+        template.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        template.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    setCurrentPage(1);
-  };
+      const matchesCategory = !filters.category || template.category === filters.category;
 
-  const handleSearchChange = (term) => {
-    setSearchTerm(term);
-    setCurrentPage(1);
-  };
+      return matchesSearch && matchesCategory;
+    });
+  }, [templates, filters.searchTerm, filters.category]);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const { currentItems, totalPages, pageNumbers } = usePagination(
+    filteredTemplates,
+    filters.page,
+    ITEMS_PER_PAGE
+  );
 
-  const handleClick = () => {
+  const updateFilters = useCallback((updates) => {
+    setFilters(prev => ({ ...prev, page: 1, ...updates }));
+  }, []);
+
+  const handleCreateClick = useCallback(() => {
     if (authUser) {
       setIsFormOpen(true);
     } else {
       toast.error("Please login first");
       navigate("/login");
     }
-  };
+  }, [authUser, navigate]);
 
   return (
     <div className="flex flex-col lg:flex-row bg-base-100 min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-8rem)] px-4 md:px-6 lg:px-8">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 xl:w-72 p-3 lg:p-4 space-y-3 lg:space-y-4  h-full">
-        <button className="btn btn-primary btn-sm lg:btn-md w-full" onClick={handleClearFilters}>
-          Show All Templates
-        </button>
+      <DesktopSidebar
+        onClearFilters={() => updateFilters({ searchTerm: "", category: "" })}
+        onCreateClick={handleCreateClick}
+        categories={categories}
+        selectedCategory={filters.category}
+        onCategoryChange={(category) => updateFilters({ category })}
+      />
 
-        {/* ✅ Fixed */}
-        <CreateButton onClick={handleClick} />
-
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={handleCategoryChange}
-        />
-      </aside>
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-base-200 p-2 sm:p-4 space-y-2 sm:space-y-3 border-b border-base-300">
-          <div className="flex gap-2">
-            <button
-              className="btn btn-primary btn-xs sm:btn-sm flex-1 text-xs sm:text-sm"
-              onClick={handleClearFilters}
-            >
-              <span className="hidden xs:inline">All Templates</span>
-              <span className="xs:hidden">All</span>
-            </button>
-            {/* ✅ Fixed */}
-            <CreateButton size="sm" mobile onClick={handleClick} />
-          </div>
+        <MobileHeader
+          onClearFilters={() => updateFilters({ searchTerm: "", category: "" })}
+          onCreateClick={handleCreateClick}
+          categories={categories}
+          selectedCategory={filters.category}
+          onCategoryChange={(category) => updateFilters({ category })}
+        />
 
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={handleCategoryChange}
-            mobile
-          />
-        </div>
-
-        {/* Main Content Area */}
         <main className="flex flex-col justify-between flex-1 p-2 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
           <div className="flex-1 space-y-3 sm:space-y-4 min-h-0">
             <div className="flex-shrink-0">
-              <SearchBar searchTerm={searchTerm} onSearchChange={handleSearchChange} />
+              <SearchBar
+                searchTerm={filters.searchTerm}
+                onSearchChange={(searchTerm) => updateFilters({ searchTerm })}
+              />
             </div>
 
             <div className="flex-1 min-h-0 overflow-auto">
@@ -126,33 +95,65 @@ const Home = () => {
                 templates={currentItems}
                 isLoading={templatesIsPending}
                 toggleOpen={() => setIsFormOpen(false)}
-                searchTerm={searchTerm}
-                selectedCategory={selectedCategory}
+                searchTerm={filters.searchTerm}
+                selectedCategory={filters.category}
               />
             </div>
           </div>
 
           <div className="flex-shrink-0 pt-2 sm:pt-4">
             <Pagination
-              currentPage={currentPage}
+              currentPage={filters.page}
               totalPages={totalPages}
               pageNumbers={pageNumbers}
-              onPageChange={handlePageChange}
+              onPageChange={(page) => setFilters(prev => ({ ...prev, page }))}
             />
           </div>
         </main>
       </div>
 
-      {/* Mobile FAB */}
       <div className="lg:hidden">
-        {/* ✅ Fixed */}
-        <CreateButton floating onClick={handleClick} />
+        <CreateButton floating onClick={handleCreateClick} />
       </div>
 
-      {/* Template Form Modal */}
       {isFormOpen && <TemplateForm onClose={() => setIsFormOpen(false)} />}
     </div>
   );
 };
+
+const DesktopSidebar = ({ onClearFilters, onCreateClick, categories, selectedCategory, onCategoryChange }) => (
+  <aside className="hidden lg:flex flex-col w-60 xl:w-72 p-3 lg:p-4 space-y-3 lg:space-y-4 h-full">
+    <button className="btn btn-primary btn-sm lg:btn-md w-full" onClick={onClearFilters}>
+      Show All Templates
+    </button>
+    <CreateButton onClick={onCreateClick} />
+    <CategoryFilter
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onCategoryChange={onCategoryChange}
+    />
+  </aside>
+);
+
+const MobileHeader = ({ onClearFilters, onCreateClick, categories, selectedCategory, onCategoryChange }) => (
+  <div className="lg:hidden bg-base-200 p-2 sm:p-4 space-y-2 sm:space-y-3 border-b border-base-300">
+    <div className="flex gap-2">
+      <button
+        className="btn btn-primary btn-xs sm:btn-sm flex-1 text-xs sm:text-sm"
+        onClick={onClearFilters}
+      >
+        <span className="hidden xs:inline">All Templates</span>
+        <span className="xs:hidden">All</span>
+      </button>
+      <CreateButton mobile onClick={onCreateClick} />
+    </div>
+    <CategoryFilter
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onCategoryChange={onCategoryChange}
+      mobile
+    />
+  </div>
+);
 
 export default Home;
