@@ -37,7 +37,7 @@ const Navbar = () => {
   const isActiveLink = (path) => location.pathname === path;
 
   const navigationItems = [
-    { path: "/", label: "Home", icon: Home },
+    { path: "/home", label: "Home", icon: Home },
     { path: "/grammar-enhancer", label: "Grammar AI", icon: FileText },
     { path: "/askAi", label: "Chat AI", icon: Bot },
   ];
@@ -51,7 +51,7 @@ const Navbar = () => {
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 min-w-0">
               <div className="text-lg sm:text-xl lg:text-2xl">📚</div>
               <Link
-                to="/"
+                to="/home"
                 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:scale-105 transition-transform duration-200 truncate"
                 onClick={closeMobileMenu}
               >
@@ -204,9 +204,9 @@ const Navbar = () => {
               {!authUser && (
                 <>
                   <Link
-                    to="/"
+                    to="/home"
                     className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 ${
-                      isActiveLink("/")
+                      isActiveLink("/home")
                         ? "bg-primary text-primary-content shadow-md"
                         : "hover:bg-base-300"
                     }`}
