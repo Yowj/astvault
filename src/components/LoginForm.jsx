@@ -54,7 +54,7 @@ export function LoginForm({ onSubmit, formData, handleChange, isPending }) {
 
           <div className="bg-base-200 relative hidden md:block">
             <img
-              src="/LoginImage.jpg"
+              src="/LoginImage.webp"
               alt="Login illustration"
               className="absolute inset-0 h-full w-full object-cover"
             />
