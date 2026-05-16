@@ -31,7 +31,7 @@ const App = () => {
   return (
     <div className="min-h-screen flex flex-col bg-base-100">
       {!isLandingPage && <Navbar />}
-      <main className={`flex-1 relative ${isLandingPage ? '' : ''}`}>
+      <main>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />

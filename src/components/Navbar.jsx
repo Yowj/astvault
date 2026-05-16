@@ -18,7 +18,6 @@ const Navbar = () => {
   if (authUser) {
     name = authUser.fullName;
     pic = authUser.profilePicture || "/kratos.png";
-    console.log(authUser)
   }
 
   const handleLogout = async (e) => {
