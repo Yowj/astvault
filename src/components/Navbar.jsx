@@ -37,8 +37,11 @@ const Navbar = () => {
 
   const navigationItems = [
     { path: "/home", label: "Home", icon: Home },
+    
+    /*
     { path: "/grammar-enhancer", label: "Grammar AI", icon: FileText },
     { path: "/askAi", label: "Chat AI", icon: Bot },
+     */
   ];
 
   return (
