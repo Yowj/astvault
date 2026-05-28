@@ -1,5 +1,5 @@
 import React, { useState, memo } from "react";
-import { Trash2, PencilLine, Copy, X, LoaderIcon } from "lucide-react";
+import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
 // eslint-disable-next-line
@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import useAuthUser from "../../hooks/useAuthUser";
 import { useNavigate } from "react-router";
 
-const Template = ({ title, description, id, category, creator_name }) => {
+const Template = ({ title, description, id, category, creator_name, isPinned, onPin, onUnpin }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isToggleDelete, setIsToggleDelete] = useState(false);
@@ -78,6 +78,19 @@ const Template = ({ title, description, id, category, creator_name }) => {
     }
   };
 
+  const pinToggle = () => {
+    if (!authUser) {
+      toast.error("Please login first");
+      navigate("/login");
+      return;
+    }
+    if (isPinned) {
+      onUnpin(id);
+    } else {
+      onPin(id);
+    }
+  };
+
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -89,21 +102,33 @@ const Template = ({ title, description, id, category, creator_name }) => {
 
   return (
     <div className="border-b border-primary/20 py-2 sm:py-3 relative w-full min-w-0">
-      <button
-        onClick={toggleOpen}
-        className="flex justify-between items-start w-full text-left group min-h-0 min-w-0"
-      >
-        <h3 className="text-base sm:text-lg lg:text-xl font-medium text-primary break-words flex-1 group-hover:text-primary/80 transition-colors duration-200 pr-2 sm:pr-4 leading-snug min-w-0">
-          {title}
-        </h3>
+      <div className="flex items-start w-full min-w-0 gap-1">
+        <button
+          onClick={toggleOpen}
+          className="flex justify-between items-start flex-1 text-left group min-h-0 min-w-0"
+        >
+          <h3 className="text-base sm:text-lg lg:text-xl font-medium text-primary break-words flex-1 group-hover:text-primary/80 transition-colors duration-200 pr-2 sm:pr-4 leading-snug min-w-0">
+            {title}
+          </h3>
+        </button>
+        <button
+          onClick={pinToggle}
+          className={`btn btn-ghost btn-xs p-1 shrink-0 mt-0.5 transition-colors duration-200 ${
+            isPinned ? "text-warning" : "text-base-content/30 hover:text-warning"
+          }`}
+          title={isPinned ? "Unpin template" : "Pin template"}
+        >
+          {isPinned ? <Pin className="w-3.5 h-3.5 fill-current" /> : <Pin className="w-3.5 h-3.5" />}
+        </button>
         <span
-          className={`transform transition-transform duration-200 text-primary/60 shrink-0 mt-1 ${
+          onClick={toggleOpen}
+          className={`transform transition-transform duration-200 text-primary/60 shrink-0 mt-1 cursor-pointer ${
             isOpen ? "rotate-180" : "rotate-0"
           }`}
         >
           ▼
         </span>
-      </button>
+      </div>
 
       {isOpen && (
         <AnimatePresence mode="popLayout">

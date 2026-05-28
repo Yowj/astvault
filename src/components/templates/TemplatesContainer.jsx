@@ -9,6 +9,9 @@ const TemplatesContainer = ({
   isLoading,
   searchTerm = "",
   selectedCategory = "",
+  pinnedIds = new Set(),
+  onPin,
+  onUnpin,
 }) => {
   if (isLoading) {
     return <LoadingSpinner message="Loading templates..." />;
@@ -56,6 +59,9 @@ const TemplatesContainer = ({
               description={template.description}
               category={template.category}
               creator_name={template.creator_name}
+              isPinned={pinnedIds.has(template.id)}
+              onPin={onPin}
+              onUnpin={onUnpin}
             />
           </motion.div>
         ))}

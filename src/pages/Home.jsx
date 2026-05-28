@@ -2,10 +2,12 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useTemplates } from "../hooks/useTemplates";
+import { usePins, usePinTemplate, useUnpinTemplate } from "../hooks/usePins";
 import { usePagination } from "../hooks/usePagination";
 import useAuthUser from "../hooks/useAuthUser";
 import TemplateForm from "../components/templates/TemplateForm";
 import TemplatesContainer from "../components/templates/TemplatesContainer";
+import PinnedPanel from "../components/templates/PinnedPanel";
 import Pagination from "../components/templates/Pagination";
 import SearchBar from "../components/templates/SearchBar";
 import CategoryFilter from "../components/templates/CategoryFilter";
@@ -17,6 +19,9 @@ const Home = () => {
   const navigate = useNavigate();
   const { authUser } = useAuthUser();
   const { templates, templatesIsPending } = useTemplates();
+  const { pinnedIds } = usePins(authUser?.id);
+  const { pinTemplateMutate } = usePinTemplate();
+  const { unpinTemplateMutate } = useUnpinTemplate();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -42,6 +47,11 @@ const Home = () => {
       return matchesSearch && matchesCategory;
     });
   }, [templates, filters.searchTerm, filters.category]);
+
+  const pinnedTemplates = useMemo(
+    () => (templates || []).filter((t) => pinnedIds.has(t.id)),
+    [templates, pinnedIds]
+  );
 
   const { currentItems, totalPages, pageNumbers } = usePagination(
     filteredTemplates,
@@ -97,6 +107,9 @@ const Home = () => {
                 toggleOpen={() => setIsFormOpen(false)}
                 searchTerm={filters.searchTerm}
                 selectedCategory={filters.category}
+                pinnedIds={pinnedIds}
+                onPin={pinTemplateMutate}
+                onUnpin={unpinTemplateMutate}
               />
             </div>
           </div>
@@ -111,6 +124,8 @@ const Home = () => {
           </div>
         </main>
       </div>
+
+      <PinnedPanel pinnedTemplates={pinnedTemplates} onUnpin={unpinTemplateMutate} />
 
       <div className="lg:hidden">
         <CreateButton floating onClick={handleCreateClick} />
