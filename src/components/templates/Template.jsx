@@ -1,5 +1,17 @@
 import React, { useState, memo } from "react";
-import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff, ChevronDown } from "lucide-react";
+import {
+  Trash2,
+  PencilLine,
+  Copy,
+  X,
+  LoaderIcon,
+  Pin,
+  PinOff,
+  ChevronDown,
+  ImageIcon,
+  Paperclip,
+  ExternalLink,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
 // eslint-disable-next-line
@@ -9,12 +21,25 @@ import { useNavigate } from "react-router";
 
 const NEW_CATEGORY = "__new_category__";
 
-const Template = ({ title, description, id, category, creator_name, isPinned, onPin, onUnpin }) => {
+const Template = ({
+  title,
+  description,
+  id,
+  category,
+  creator_name,
+  isPinned,
+  onPin,
+  onUnpin,
+  imageUrl,
+  fileUrl,
+}) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isToggleDelete, setIsToggleDelete] = useState(false);
   const [isToggleEdit, setIsToggleEdit] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [editingRef, setEditingRef] = useState(null); // "image" | "file" | null
+  const [tempUrl, setTempUrl] = useState("");
   const { authUser } = useAuthUser();
 
   const [formData, setFormData] = useState({
@@ -75,6 +100,46 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
     }
   };
 
+  const openRefEditor = (type) => {
+    requireAuth(() => {
+      if (editingRef === type) {
+        setEditingRef(null);
+        return;
+      }
+      setEditingRef(type);
+      setTempUrl(type === "image" ? (imageUrl || "") : (fileUrl || ""));
+    });
+  };
+
+  const handleRefSave = () => {
+    if (!tempUrl.trim()) return;
+    updateTemplateMutate({
+      id,
+      title,
+      description,
+      category,
+      imageUrl: editingRef === "image" ? tempUrl.trim() : imageUrl,
+      fileUrl: editingRef === "file" ? tempUrl.trim() : fileUrl,
+    });
+    setEditingRef(null);
+    setTempUrl("");
+  };
+
+  const handleRefRemove = () => {
+    updateTemplateMutate({
+      id,
+      title,
+      description,
+      category,
+      imageUrl: editingRef === "image" ? "" : imageUrl,
+      fileUrl: editingRef === "file" ? "" : fileUrl,
+    });
+    setEditingRef(null);
+    setTempUrl("");
+  };
+
+  const currentRefValue = editingRef === "image" ? imageUrl : fileUrl;
+
   return (
     <>
       {/* Card */}
@@ -130,6 +195,114 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
                 <p className="text-sm sm:text-base text-base-content/80 leading-relaxed whitespace-pre-wrap break-words">
                   {description}
                 </p>
+
+                {/* References */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-base-content/50">References:</span>
+
+                    {/* Image button */}
+                    <button
+                      onClick={() => openRefEditor("image")}
+                      className={`btn btn-xs gap-1.5 border transition-colors duration-200 ${
+                        imageUrl
+                          ? "btn-ghost border-primary/40 text-primary hover:btn-primary"
+                          : "btn-ghost border-dashed border-base-300 text-base-content/40 hover:border-primary/40 hover:text-primary"
+                      } ${editingRef === "image" ? "btn-primary text-primary-content border-primary" : ""}`}
+                      title={imageUrl ? "Edit image" : "Add image URL"}
+                    >
+                      <ImageIcon className="w-3 h-3" />
+                      <span className="text-xs">{imageUrl ? "Picture" : "Add image"}</span>
+                    </button>
+
+                    {/* File button */}
+                    <button
+                      onClick={() => openRefEditor("file")}
+                      className={`btn btn-xs gap-1.5 border transition-colors duration-200 ${
+                        fileUrl
+                          ? "btn-ghost border-secondary/40 text-secondary hover:btn-secondary"
+                          : "btn-ghost border-dashed border-base-300 text-base-content/40 hover:border-secondary/40 hover:text-secondary"
+                      } ${editingRef === "file" ? "btn-secondary text-secondary-content border-secondary" : ""}`}
+                      title={fileUrl ? "Edit file link" : "Add file link"}
+                    >
+                      <Paperclip className="w-3 h-3" />
+                      <span className="text-xs">{fileUrl ? "File" : "Add link"}</span>
+                    </button>
+                  </div>
+
+                  {/* Inline editor */}
+                  <AnimatePresence>
+                    {editingRef && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.15, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-2 p-3 bg-base-200/60 rounded-lg border border-base-300">
+                          <p className="text-xs text-base-content/60 font-medium">
+                            {editingRef === "image" ? "Image URL" : "File / Link URL"}
+                          </p>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="url"
+                              className="input input-bordered input-xs flex-1 focus:input-primary bg-base-100"
+                              placeholder={
+                                editingRef === "image"
+                                  ? "https://example.com/image.png"
+                                  : "https://example.com/file.pdf"
+                              }
+                              value={tempUrl}
+                              onChange={(e) => setTempUrl(e.target.value)}
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleRefSave();
+                                if (e.key === "Escape") setEditingRef(null);
+                              }}
+                            />
+                            {currentRefValue && (
+                              <a
+                                href={currentRefValue}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-ghost btn-xs shrink-0"
+                                title="Open current"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex gap-2 justify-between">
+                            {currentRefValue && (
+                              <button
+                                onClick={handleRefRemove}
+                                className="btn btn-ghost btn-xs text-error hover:btn-error"
+                              >
+                                Remove
+                              </button>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                              <button
+                                onClick={() => setEditingRef(null)}
+                                className="btn btn-ghost btn-xs"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleRefSave}
+                                className="btn btn-primary btn-xs"
+                                disabled={!tempUrl.trim()}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">

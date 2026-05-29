@@ -44,6 +44,8 @@ export const supabaseTemplatesAPI = {
           title: templateData.title,
           description: templateData.description,
           category: templateData.category,
+          image_url: templateData.imageUrl || null,
+          file_url: templateData.fileUrl || null,
         },
       ])
       .select()
@@ -54,16 +56,24 @@ export const supabaseTemplatesAPI = {
   },
 
   // Update existing template
-  update: async ({ id, title, description, category }) => {
+  update: async ({ id, title, description, category, imageUrl, fileUrl }) => {
     // Get current user
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
+    const payload = {
+      title,
+      description,
+      category,
+      ...(imageUrl !== undefined && { image_url: imageUrl }),
+      ...(fileUrl !== undefined && { file_url: fileUrl }),
+    };
+
     const { data, error } = await supabase
       .from("templates")
-      .update({ title, description, category })
+      .update(payload)
       .eq("id", id)
       .eq("creator_id", user.id) // Ensure user can only update their own templates
       .select()

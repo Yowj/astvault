@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LoaderIcon, X, Plus, Sparkles } from "lucide-react";
+import { LoaderIcon, X, Plus, Sparkles, ImageIcon, Paperclip } from "lucide-react";
 import { useCreateTemplate, useTemplates} from "../../hooks/useTemplates";
 
 const TemplateForm = ({ onClose }) => {
@@ -8,6 +8,8 @@ const TemplateForm = ({ onClose }) => {
     description: "",
     category: "",
     newCategory: "",
+    imageUrl: "",
+    fileUrl: "",
   });
 
   const [categories, setCategories] = useState([]);
@@ -39,6 +41,8 @@ const TemplateForm = ({ onClose }) => {
       title: formData.title,
       description: formData.description,
       category: categoryToUse,
+      imageUrl: formData.imageUrl.trim() || null,
+      fileUrl: formData.fileUrl.trim() || null,
     });
 
     setFormData({
@@ -46,6 +50,8 @@ const TemplateForm = ({ onClose }) => {
       description: "",
       category: "",
       newCategory: "",
+      imageUrl: "",
+      fileUrl: "",
     });
 
     onClose();
@@ -155,7 +161,6 @@ const TemplateForm = ({ onClose }) => {
                 </span>
               </label>
               <textarea
-              
                 className="textarea textarea-bordered w-full h-32 sm:h-64 focus:textarea-primary transition-all duration-200 resize-none leading-relaxed p-3"
                 name="description"
                 value={formData.description}
@@ -166,6 +171,41 @@ const TemplateForm = ({ onClose }) => {
                 <span className="label-text-alt text-base-content/60">
                   💡 Make it clear and useful for others to understand and use
                 </span>
+              </div>
+            </div>
+
+            {/* References (optional) */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-base-content">References <span className="text-base-content/40 font-normal">(optional)</span></p>
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text flex items-center gap-1.5 text-base-content/70">
+                    <ImageIcon className="w-3.5 h-3.5" /> Image URL
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  className="input input-bordered input-sm w-full focus:input-primary transition-all duration-200"
+                  name="imageUrl"
+                  placeholder="https://example.com/image.png"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text flex items-center gap-1.5 text-base-content/70">
+                    <Paperclip className="w-3.5 h-3.5" /> File / Link URL
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  className="input input-bordered input-sm w-full focus:input-primary transition-all duration-200"
+                  name="fileUrl"
+                  placeholder="https://example.com/file.pdf"
+                  value={formData.fileUrl}
+                  onChange={handleChange}
+                />
               </div>
             </div>
           </form>

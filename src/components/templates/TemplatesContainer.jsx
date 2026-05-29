@@ -62,6 +62,8 @@ const TemplatesContainer = ({
               isPinned={pinnedIds.has(template.id)}
               onPin={onPin}
               onUnpin={onUnpin}
+              imageUrl={template.image_url || ""}
+              fileUrl={template.file_url || ""}
             />
           </motion.div>
         ))}
