@@ -1,5 +1,5 @@
 import React, { useState, memo } from "react";
-import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff } from "lucide-react";
+import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff, ImageIcon, Paperclip } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
 // eslint-disable-next-line
@@ -180,6 +180,24 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
             </div>
 
             <div className="text-xs text-base-content/60 mt-2">Added by: {creator_name}</div>
+
+            <div className="flex gap-2 mt-3">
+              <p className="">Template references: </p>
+              <button
+                className="btn btn-ghost btn-xs gap-1.5 border border-base-300 text-base-content/50"
+                title="Picture link"
+              >
+                <ImageIcon className="w-3 h-3" />
+                <span className="text-xs">Picture</span>
+              </button>
+              <button
+                className="btn btn-ghost btn-xs gap-1.5 border border-base-300 text-base-content/50"
+                title="File link"
+              >
+                <Paperclip className="w-3 h-3" />
+                <span className="text-xs">File</span>
+              </button>
+            </div>
           </motion.div>
         </AnimatePresence>
       )}
