@@ -1,11 +1,13 @@
 import React, { useState, memo } from "react";
-import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff, ImageIcon, Paperclip } from "lucide-react";
+import { Trash2, PencilLine, Copy, X, LoaderIcon, Pin, PinOff, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
 // eslint-disable-next-line
 import { AnimatePresence, motion } from "framer-motion";
 import useAuthUser from "../../hooks/useAuthUser";
 import { useNavigate } from "react-router";
+
+const NEW_CATEGORY = "__new_category__";
 
 const Template = ({ title, description, id, category, creator_name, isPinned, onPin, onUnpin }) => {
   const navigate = useNavigate();
@@ -16,210 +18,187 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
   const { authUser } = useAuthUser();
 
   const [formData, setFormData] = useState({
-    title: title,
-    description: description,
-    category: category,
+    title,
+    description,
+    category,
     newCategory: "",
   });
 
   const { updateTemplateMutate, updateTemplateIsPending } = useUpdateTemplate();
   const { deleteTemplateMutate, deleteTemplateIsPending } = useDeleteTemplate();
-
   const { templates, templatesIsPending } = useTemplates();
 
   React.useEffect(() => {
     if (templates && Array.isArray(templates)) {
-      const categories = templates.map((template) => template.category);
-      const uniqueCategories = Array.from(new Set(categories));
+      const uniqueCategories = Array.from(new Set(templates.map((t) => t.category)));
       setCategories(uniqueCategories);
     }
   }, [templates]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const categoryToUse = formData.newCategory || formData.category;
-
+    const categoryToUse =
+      formData.category === NEW_CATEGORY ? formData.newCategory : formData.category;
     updateTemplateMutate({
       id,
       title: formData.title,
       description: formData.description,
       category: categoryToUse,
     });
-
-    editToggle();
+    setIsToggleEdit(false);
   };
 
-  const toggleOpen = () => {
-    setIsOpen((prev) => !prev);
-  };
-
-  const deleteToggle = () => {
-    if (authUser) {
-      setIsToggleDelete(!isToggleDelete);
-    } else {
-      toast.error("Please login first");
-      navigate("/login");
-    }
-  };
-
-  const editToggle = () => {
-    if (authUser) {
-      setIsToggleEdit(!isToggleEdit);
-    } else {
-      toast.error("Please login first");
-      navigate("/login");
-    }
-  };
-
-  const pinToggle = () => {
+  const requireAuth = (action) => {
     if (!authUser) {
       toast.error("Please login first");
       navigate("/login");
       return;
     }
-    if (isPinned) {
-      onUnpin(id);
-    } else {
-      onPin(id);
-    }
+    action();
   };
 
-  const copyToClipboard = async (text) => {
+  const toggleOpen = () => setIsOpen((prev) => !prev);
+  const deleteToggle = () => requireAuth(() => setIsToggleDelete((prev) => !prev));
+  const editToggle = () => requireAuth(() => setIsToggleEdit((prev) => !prev));
+  const pinToggle = () => requireAuth(() => (isPinned ? onUnpin(id) : onPin(id)));
+
+  const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      toast.success("Text copied to clipboard!");
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
+      await navigator.clipboard.writeText(description);
+      toast.success("Copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy");
     }
   };
 
   return (
-    <div className="border-b border-primary/20 py-2 sm:py-3 relative w-full min-w-0">
-      <div className="flex items-start w-full min-w-0 gap-1">
-        <button
-          onClick={toggleOpen}
-          className="flex justify-between items-start flex-1 text-left group min-h-0 min-w-0"
-        >
-          <h3 className="text-base sm:text-lg lg:text-xl font-medium text-primary break-words flex-1 group-hover:text-primary/80 transition-colors duration-200 pr-2 sm:pr-4 leading-snug min-w-0">
-            {title}
-          </h3>
-        </button>
-        <button
-          onClick={pinToggle}
-          className={`btn btn-ghost btn-xs p-1 shrink-0 mt-0.5 transition-colors duration-200 ${
-            isPinned ? "text-warning" : "text-base-content/30 hover:text-warning"
-          }`}
-          title={isPinned ? "Unpin template" : "Pin template"}
-        >
-          {isPinned ? <Pin className="w-3.5 h-3.5 fill-current" /> : <Pin className="w-3.5 h-3.5" />}
-        </button>
-        <span
-          onClick={toggleOpen}
-          className={`transform transition-transform duration-200 text-primary/60 shrink-0 mt-1 cursor-pointer ${
-            isOpen ? "rotate-180" : "rotate-0"
-          }`}
-        >
-          ▼
-        </span>
+    <>
+      {/* Card */}
+      <div
+        className={`rounded-xl bg-base-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-base-300 ${
+          isPinned ? "border-l-4 border-l-warning" : ""
+        }`}
+      >
+        {/* Card Header — always visible */}
+        <div className="flex items-center gap-2 px-4 py-3 sm:px-5 sm:py-4">
+          <button
+            onClick={pinToggle}
+            className={`shrink-0 p-1 rounded-md transition-colors duration-200 ${
+              isPinned
+                ? "text-warning hover:text-warning/60"
+                : "text-base-content/25 hover:text-warning"
+            }`}
+            title={isPinned ? "Unpin template" : "Pin template"}
+          >
+            {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+          </button>
+
+          <button
+            onClick={toggleOpen}
+            className="flex-1 flex items-center gap-3 text-left group min-w-0"
+          >
+            <h3 className="flex-1 text-base sm:text-lg font-semibold text-base-content group-hover:text-primary transition-colors duration-200 break-words min-w-0">
+              {title}
+            </h3>
+            <span className="badge badge-ghost badge-sm text-primary/70 border-primary/20 shrink-0 hidden sm:inline-flex">
+              {category}
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-base-content/40 shrink-0 transition-transform duration-200 ${
+                isOpen ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Expanded Content */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              key={id}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5 border-t border-base-200 pt-3 space-y-3">
+                <p className="text-sm sm:text-base text-base-content/80 leading-relaxed whitespace-pre-wrap break-words">
+                  {description}
+                </p>
+
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-base-content/50">by {creator_name}</span>
+                    <span className="badge badge-ghost badge-sm text-primary/70 border-primary/20 sm:hidden">
+                      {category}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={editToggle}
+                      className="btn btn-ghost btn-xs hover:btn-primary"
+                      title="Edit"
+                    >
+                      <PencilLine className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={copyToClipboard}
+                      className="btn btn-ghost btn-xs hover:btn-success"
+                      title="Copy content"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={deleteToggle}
+                      className="btn btn-ghost btn-xs hover:btn-error"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {isOpen && (
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "linear" }}
-            className="mt-2 sm:mt-3 w-full min-w-0"
-          >
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4 w-full min-w-0">
-              <p
-                className="text-secondary cursor-pointer hover:text-accent break-words flex-1 transition-colors duration-200 leading-relaxed text-xs sm:text-sm lg:text-base overflow-hidden order-2 sm:order-1 min-w-0 max-w-full"
-                onClick={() => copyToClipboard(description)}
-                title="Click to copy"
-                style={{
-                  wordWrap: "break-word",
-                  overflowWrap: "break-word",
-                  wordBreak: "break-word",
-                }}
-              >
-                {description}
-              </p>
-
-              <div className="flex gap-1 sm:gap-2 flex-shrink-0 order-1 sm:order-2 justify-end max-w-fit">
-                <button
-                  onClick={() => editToggle()}
-                  className="btn btn-ghost btn-xs hover:btn-primary p-1 sm:p-2 flex-shrink-0"
-                  title="Edit"
-                >
-                  <PencilLine className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                <button
-                  onClick={() => copyToClipboard(description)}
-                  className="btn btn-ghost btn-xs hover:btn-success p-1 sm:p-2 flex-shrink-0"
-                  title="Copy"
-                >
-                  <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                <button
-                  onClick={() => deleteToggle()}
-                  className="btn btn-ghost btn-xs hover:btn-error p-1 sm:p-2 flex-shrink-0"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="text-xs text-base-content/60 mt-2">Added by: {creator_name}</div>
-
-            <div className="flex gap-2 mt-3">
-              <p className="">Template references: </p>
-              <button
-                className="btn btn-ghost btn-xs gap-1.5 border border-base-300 text-base-content/50"
-                title="Picture link"
-              >
-                <ImageIcon className="w-3 h-3" />
-                <span className="text-xs">Picture</span>
-              </button>
-              <button
-                className="btn btn-ghost btn-xs gap-1.5 border border-base-300 text-base-content/50"
-                title="File link"
-              >
-                <Paperclip className="w-3 h-3" />
-                <span className="text-xs">File</span>
-              </button>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      )}
-
+      {/* Delete Modal */}
       {isToggleDelete && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="flex flex-col gap-3 sm:gap-4 lg:gap-6 border border-base-300 p-3 sm:p-4 lg:p-6 rounded-xl shadow-2xl relative w-full bg-base-100 max-w-xs sm:max-w-sm lg:max-w-md items-center">
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={deleteToggle}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="bg-base-100 rounded-2xl shadow-2xl border border-base-300 w-full max-w-sm p-6 flex flex-col items-center gap-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 bg-error/10 rounded-full flex items-center justify-center">
+              <Trash2 className="w-6 h-6 text-error" />
+            </div>
             <div className="text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Trash2 className="w-5 h-5 sm:w-6 sm:h-6 text-error" />
-              </div>
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-base-content mb-2">
-                Delete Template
-              </h2>
-              <p className="text-xs sm:text-sm lg:text-base text-base-content/70 leading-relaxed">
-                Are you sure you want to delete this template? This action cannot be undone.
+              <h2 className="text-lg font-bold text-base-content">Delete Template</h2>
+              <p className="text-sm text-base-content/70 mt-1 leading-relaxed">
+                Are you sure you want to delete{" "}
+                <span className="font-medium text-base-content">"{title}"</span>? This cannot be
+                undone.
               </p>
             </div>
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 w-full">
+            <div className="flex gap-3 w-full">
               <button
                 onClick={deleteToggle}
-                className="btn btn-outline btn-xs sm:btn-sm lg:btn-md flex-1 text-xs sm:text-sm"
+                className="btn btn-outline flex-1"
+                disabled={deleteTemplateIsPending}
               >
                 Cancel
               </button>
@@ -228,150 +207,153 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
                   deleteTemplateMutate(id);
                   setIsToggleDelete(false);
                 }}
-                className="btn btn-error btn-xs sm:btn-sm lg:btn-md flex-1 text-xs sm:text-sm"
+                className="btn btn-error flex-1"
                 disabled={deleteTemplateIsPending}
               >
-                {deleteTemplateIsPending ? "Deleting..." : "Delete"}
+                {deleteTemplateIsPending ? (
+                  <>
+                    <LoaderIcon className="animate-spin w-4 h-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
+      {/* Edit Modal */}
       {isToggleEdit && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-base-100 rounded-2xl shadow-2xl border border-base-300 w-full max-w-md lg:max-w-lg xl:max-w-xl relative overflow-hidden max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-300">
-            {/* Modern Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 sm:p-6 border-b border-base-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
-                    <PencilLine className="w-5 h-5 text-primary-content" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-base-content">Edit Template</h2>
-                    <p className="text-sm text-base-content/70 mt-0.5">
-                      Update your template information
-                    </p>
-                  </div>
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={editToggle}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="bg-base-100 rounded-2xl shadow-2xl border border-base-300 w-full max-w-lg flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-base-300 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <PencilLine className="w-4 h-4 text-primary" />
                 </div>
-                <button
-                  className="p-2 hover:bg-base-300 rounded-lg transition-colors duration-200"
-                  onClick={editToggle}
-                  aria-label="Close"
-                  disabled={updateTemplateIsPending}
-                >
-                  <X className="w-5 h-5 text-base-content/70" />
-                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-base-content">Edit Template</h2>
+                  <p className="text-xs text-base-content/50">Update your template</p>
+                </div>
               </div>
+              <button
+                className="p-2 hover:bg-base-200 rounded-lg transition-colors"
+                onClick={() => setIsToggleEdit(false)}
+                disabled={updateTemplateIsPending}
+              >
+                <X className="w-4 h-4 text-base-content/60" />
+              </button>
             </div>
 
-            {/* Form Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Title Input */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold text-base-content">Title</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="input input-bordered w-full focus:input-primary transition-all duration-200"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold">Title</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full focus:input-primary"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-                {/* Category Select */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold text-base-content">Category</span>
-                  </label>
-                  <select
-                    name="category"
-                    className="select select-bordered w-full focus:select-primary transition-all duration-200"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold">Category</span>
+                </label>
+                <select
+                  name="category"
+                  className="select select-bordered w-full focus:select-primary"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+                  {!templatesIsPending &&
+                    categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  <option value={NEW_CATEGORY}>+ Create new category</option>
+                </select>
+              </div>
+
+              <AnimatePresence>
+                {formData.category === NEW_CATEGORY && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="form-control"
                   >
-                    <option value="" disabled>
-                      Select a category
-                    </option>
-                    {!templatesIsPending &&
-                      categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    <option value="1">+ Create new category</option>
-                  </select>
-                </div>
-
-                {/* New Category Input */}
-                {formData.category === "1" && (
-                  <div className="form-control animate-in slide-in-from-top duration-300">
                     <label className="label">
-                      <span className="label-text font-semibold text-base-content">
-                        New Category Name
-                      </span>
+                      <span className="label-text font-semibold">New Category Name</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter the name for your new category"
-                      className="input input-bordered w-full focus:input-primary transition-all duration-200"
+                      placeholder="Enter new category name"
+                      className="input input-bordered w-full focus:input-primary"
                       name="newCategory"
                       value={formData.newCategory}
                       onChange={handleChange}
                       required
                     />
-                  </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
 
-                {/* Description Textarea */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold text-base-content">Content</span>
-                  </label>
-                  <textarea
-                    className="textarea textarea-bordered w-full h-32 sm:h-64 focus:textarea-primary transition-all duration-200 resize-none leading-relaxed p-3"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                  />
-                  <div className="label">
-                    <span className="label-text-alt text-base-content/60">
-                      💡 Make it clear and useful for others to understand and use
-                    </span>
-                  </div>
-                </div>
-              </form>
-            </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold">Content</span>
+                </label>
+                <textarea
+                  className="textarea textarea-bordered w-full h-40 sm:h-56 focus:textarea-primary resize-none leading-relaxed"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            {/* Footer */}
-            <div className="bg-base-200/50 px-4 py-4 sm:px-6 border-t border-base-300">
-              <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end">
+              <div className="flex gap-3 justify-end pt-1">
                 <button
                   type="button"
                   className="btn btn-outline"
-                  onClick={editToggle}
+                  onClick={() => setIsToggleEdit(false)}
                   disabled={updateTemplateIsPending}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="btn btn-primary gap-2"
                   disabled={
                     updateTemplateIsPending ||
                     !formData.title.trim() ||
                     !formData.description.trim() ||
                     !formData.category ||
-                    (formData.category === "1" && !formData.newCategory.trim())
+                    (formData.category === NEW_CATEGORY && !formData.newCategory.trim())
                   }
-                  onClick={handleSubmit}
                 >
                   {updateTemplateIsPending ? (
                     <>
@@ -386,16 +368,11 @@ const Template = ({ title, description, id, category, creator_name, isPinned, on
                   )}
                 </button>
               </div>
-            </div>
-          </div>
+            </form>
+          </motion.div>
         </div>
       )}
-
-      {/* Category Badge */}
-      <div className="absolute right-0 bottom-0.5 sm:bottom-1 text-xs text-primary/70 hover:text-primary transition-colors duration-200 truncate max-w-20 sm:max-w-32">
-        {category}
-      </div>
-    </div>
+    </>
   );
 };
 
