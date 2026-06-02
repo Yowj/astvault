@@ -57,11 +57,32 @@ export const supabaseTemplatesAPI = {
 
   // Update existing template
   update: async ({ id, title, description, category, imageUrl, fileUrl }) => {
-    // Get current user
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
+
+    // Snapshot current state before overwriting
+    const { data: current } = await supabase
+      .from("templates")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (current) {
+      await supabase.from("template_history").insert([
+        {
+          template_id: id,
+          changed_by_id: user.id,
+          changed_by_name: current.creator_name || "",
+          title: current.title,
+          description: current.description,
+          category: current.category,
+          image_url: current.image_url || null,
+          file_url: current.file_url || null,
+        },
+      ]);
+    }
 
     const payload = {
       title,
@@ -75,7 +96,7 @@ export const supabaseTemplatesAPI = {
       .from("templates")
       .update(payload)
       .eq("id", id)
-      .eq("creator_id", user.id) // Ensure user can only update their own templates
+      .eq("creator_id", user.id)
       .select()
       .maybeSingle();
 
@@ -83,6 +104,18 @@ export const supabaseTemplatesAPI = {
     if (!data) throw new Error("You can only update your own templates");
 
     return { message: "Template updated successfully", template: data };
+  },
+
+  // Get change history for a template
+  getHistory: async (templateId) => {
+    const { data, error } = await supabase
+      .from("template_history")
+      .select("*")
+      .eq("template_id", templateId)
+      .order("changed_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
   },
 
   // Delete template

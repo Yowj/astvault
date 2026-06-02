@@ -99,6 +99,21 @@ export const useDeleteTemplate = () => {
   };
 };
 
+export const useTemplateHistory = (templateId) => {
+  const historyQuery = useQuery({
+    queryKey: ["template_history", templateId],
+    queryFn: () => supabaseTemplatesAPI.getHistory(templateId),
+    enabled: !!templateId,
+    staleTime: 0,
+  });
+
+  return {
+    history: historyQuery.data || [],
+    historyIsPending: historyQuery.isLoading,
+    historyIsError: historyQuery.isError,
+  };
+};
+
 export const useAskAI = () => {
   const { mutate, isPending, error } = useMutation({
     mutationFn: (prompt) => supabaseTemplatesAPI.askAI(prompt),

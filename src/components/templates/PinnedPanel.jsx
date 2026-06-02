@@ -24,7 +24,7 @@ const PinnedPanel = ({ pinnedTemplates, onUnpin }) => {
       {pinnedTemplates.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 text-center text-base-content/40 gap-2 py-8">
           <Pin className="w-8 h-8 opacity-30" />
-          <p className="text-xs leading-relaxed">Pin templates for quick access</p>
+          <p className="text-xs leading-relaxed">Pin templates for quick access - Only you can see your pinned templates</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto space-y-1.5">

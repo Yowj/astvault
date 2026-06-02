@@ -11,6 +11,7 @@ import {
   ImageIcon,
   Paperclip,
   ExternalLink,
+  History,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
@@ -18,6 +19,7 @@ import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/
 import { AnimatePresence, motion } from "framer-motion";
 import useAuthUser from "../../hooks/useAuthUser";
 import { useNavigate } from "react-router";
+import TemplateHistoryModal from "./TemplateHistoryModal";
 
 const NEW_CATEGORY = "__new_category__";
 
@@ -37,6 +39,7 @@ const Template = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isToggleDelete, setIsToggleDelete] = useState(false);
   const [isToggleEdit, setIsToggleEdit] = useState(false);
+  const [isToggleHistory, setIsToggleHistory] = useState(false);
   const [categories, setCategories] = useState([]);
   const [editingRef, setEditingRef] = useState(null); // "image" | "file" | null
   const [tempUrl, setTempUrl] = useState("");
@@ -314,6 +317,13 @@ const Template = ({
 
                   <div className="flex items-center gap-1">
                     <button
+                      onClick={() => setIsToggleHistory(true)}
+                      className="btn btn-ghost btn-xs hover:btn-warning"
+                      title="Change history"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                       onClick={editToggle}
                       className="btn btn-ghost btn-xs hover:btn-primary"
                       title="Edit"
@@ -395,6 +405,16 @@ const Template = ({
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* History Modal */}
+      {isToggleHistory && (
+        <TemplateHistoryModal
+          templateId={id}
+          currentTitle={title}
+          onClose={() => setIsToggleHistory(false)}
+          canRestore={!!authUser}
+        />
       )}
 
       {/* Edit Modal */}
