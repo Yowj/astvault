@@ -64,6 +64,8 @@ const TemplatesContainer = ({
               onUnpin={onUnpin}
               imageUrl={template.image_url || ""}
               fileUrl={template.file_url || ""}
+              visibility={template.visibility || "public"}
+              family_name={template.family_name || ""}
             />
           </motion.div>
         ))}

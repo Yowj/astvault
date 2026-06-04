@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Ai from "./pages/Ai_grammar";
 import AiChat from "./pages/Ai_chat";
+import FamiliesPage from "./pages/FamiliesPage";
 import useAuthUser from "./hooks/useAuthUser";
 
 const App = () => {
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/home" />} />
           <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" />} />
+          <Route path="/families" element={user ? <FamiliesPage /> : <Navigate to="/login" />} />
           <Route path="/grammar-enhancer" element={user ? <Ai /> : <Navigate to="/login" />} />
           <Route path="/askAi" element={user ? <AiChat /> : <Navigate to="/login" />} />
           <Route path="*" element={<NotFound />} />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ThemeController from "./ui/ThemeController";
 import OnlineUsers from "./templates/OnlineUsers";
-import { LogOut, Menu, X, Bot, FileText, Home, User, Loader2 } from "lucide-react";
+import { LogOut, Menu, X, Bot, FileText, Home, User, Loader2, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
 import useLogout from "../hooks/useLogout";
@@ -37,7 +37,8 @@ const Navbar = () => {
 
   const navigationItems = [
     { path: "/home", label: "Home", icon: Home },
-    
+    { path: "/families", label: "Families", icon: Users },
+
     /*
     { path: "/grammar-enhancer", label: "Grammar AI", icon: FileText },
     { path: "/askAi", label: "Chat AI", icon: Bot },

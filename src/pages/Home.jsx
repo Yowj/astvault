@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Globe, Users } from "lucide-react";
 import { useTemplates } from "../hooks/useTemplates";
 import { usePins, usePinTemplate, useUnpinTemplate } from "../hooks/usePins";
 import { usePagination } from "../hooks/usePagination";
 import useAuthUser from "../hooks/useAuthUser";
+import { useUserFamilies } from "../hooks/useFamilies";
 import TemplateForm from "../components/templates/TemplateForm";
 import TemplatesContainer from "../components/templates/TemplatesContainer";
 import PinnedPanel from "../components/templates/PinnedPanel";
@@ -19,11 +21,13 @@ const Home = () => {
   const navigate = useNavigate();
   const { authUser } = useAuthUser();
   const { templates, templatesIsPending } = useTemplates();
+  const { families } = useUserFamilies();
   const { pinnedIds } = usePins(authUser?.id);
   const { pinTemplateMutate } = usePinTemplate();
   const { unpinTemplateMutate } = useUnpinTemplate();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [familyTab, setFamilyTab] = useState("all"); // "all" | "public" | family.id
   const [filters, setFilters] = useState({
     searchTerm: "",
     category: "",
@@ -44,9 +48,14 @@ const Home = () => {
 
       const matchesCategory = !filters.category || template.category === filters.category;
 
-      return matchesSearch && matchesCategory;
+      const matchesTab =
+        familyTab === "all" ||
+        (familyTab === "public" && template.visibility === "public") ||
+        (familyTab !== "public" && template.family_id === familyTab);
+
+      return matchesSearch && matchesCategory && matchesTab;
     });
-  }, [templates, filters.searchTerm, filters.category]);
+  }, [templates, filters.searchTerm, filters.category, familyTab]);
 
   const pinnedTemplates = useMemo(
     () => (templates || []).filter((t) => pinnedIds.has(t.id)),
@@ -99,6 +108,33 @@ const Home = () => {
                 onSearchChange={(searchTerm) => updateFilters({ searchTerm })}
               />
             </div>
+
+            {(families.length > 0) && (
+              <div className="flex-shrink-0 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+                <button
+                  className={`btn btn-xs gap-1 shrink-0 ${familyTab === "all" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => { setFamilyTab("all"); updateFilters({}); }}
+                >
+                  All
+                </button>
+                <button
+                  className={`btn btn-xs gap-1 shrink-0 ${familyTab === "public" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => { setFamilyTab("public"); updateFilters({}); }}
+                >
+                  <Globe className="w-3 h-3" /> Public
+                </button>
+                {families.map((f) => (
+                  <button
+                    key={f.id}
+                    className={`btn btn-xs gap-1 shrink-0 ${familyTab === f.id ? "btn-secondary" : "btn-ghost"}`}
+                    onClick={() => { setFamilyTab(f.id); updateFilters({}); }}
+                  >
+                    <Users className="w-3 h-3" />
+                    <span className="max-w-[100px] truncate">{f.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex-1 min-h-0 overflow-auto">
               <TemplatesContainer

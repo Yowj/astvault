@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { LoaderIcon, X, Plus, Sparkles, ImageIcon, Paperclip } from "lucide-react";
+import { LoaderIcon, X, Plus, Sparkles, ImageIcon, Paperclip, Globe, Users } from "lucide-react";
 import { useCreateTemplate, useTemplates} from "../../hooks/useTemplates";
+import { useUserFamilies } from "../../hooks/useFamilies";
 
 const TemplateForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -10,12 +11,15 @@ const TemplateForm = ({ onClose }) => {
     newCategory: "",
     imageUrl: "",
     fileUrl: "",
+    visibility: "public",
+    familyId: "",
   });
 
   const [categories, setCategories] = useState([]);
 
   const { createTemplateMutate, createTemplateIsPending } = useCreateTemplate();
   const { templates, templatesIsPending } = useTemplates();
+  const { families } = useUserFamilies();
 
   useEffect(() => {
     if (templates && templates.length > 0) {
@@ -37,12 +41,27 @@ const TemplateForm = ({ onClose }) => {
 
     const categoryToUse = formData.category === "1" ? formData.newCategory : formData.category;
 
+    const resolvedFamilyId =
+      formData.visibility === "family"
+        ? families.length === 1
+          ? families[0].id
+          : formData.familyId
+        : null;
+
+    const resolvedFamilyName =
+      formData.visibility === "family"
+        ? families.find((f) => f.id === resolvedFamilyId)?.name || null
+        : null;
+
     createTemplateMutate({
       title: formData.title,
       description: formData.description,
       category: categoryToUse,
       imageUrl: formData.imageUrl.trim() || null,
       fileUrl: formData.fileUrl.trim() || null,
+      visibility: formData.visibility,
+      familyId: resolvedFamilyId,
+      familyName: resolvedFamilyName,
     });
 
     setFormData({
@@ -52,6 +71,8 @@ const TemplateForm = ({ onClose }) => {
       newCategory: "",
       imageUrl: "",
       fileUrl: "",
+      visibility: "public",
+      familyId: "",
     });
 
     onClose();
@@ -153,6 +174,82 @@ const TemplateForm = ({ onClose }) => {
               </div>
             )}
 
+            {/* Visibility Selector */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold text-base-content">Visibility</span>
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="public"
+                    className="radio radio-primary radio-sm"
+                    checked={formData.visibility === "public"}
+                    onChange={() =>
+                      setFormData((prev) => ({ ...prev, visibility: "public", familyId: "" }))
+                    }
+                  />
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Globe className="w-3.5 h-3.5" /> Public
+                  </span>
+                </label>
+                <label
+                  className={`flex items-center gap-2 ${
+                    families.length === 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="family"
+                    className="radio radio-secondary radio-sm"
+                    checked={formData.visibility === "family"}
+                    disabled={families.length === 0}
+                    onChange={() =>
+                      setFormData((prev) => ({ ...prev, visibility: "family" }))
+                    }
+                  />
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Users className="w-3.5 h-3.5" /> Family only
+                  </span>
+                </label>
+              </div>
+              {families.length === 0 && (
+                <div className="label">
+                  <span className="label-text-alt text-base-content/50">
+                    Join or create a family first to share family-only templates
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Family selector (shown when visibility is "family" and user has multiple families) */}
+            {formData.visibility === "family" && families.length > 1 && (
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold text-base-content">Share with</span>
+                </label>
+                <select
+                  name="familyId"
+                  className="select select-bordered w-full focus:select-secondary"
+                  value={formData.familyId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Select a family
+                  </option>
+                  {families.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Description Textarea */}
             <div className="form-control">
               <label className="label">
@@ -230,7 +327,8 @@ const TemplateForm = ({ onClose }) => {
                 !formData.title.trim() ||
                 !formData.description.trim() ||
                 !formData.category ||
-                (formData.category === "1" && !formData.newCategory.trim())
+                (formData.category === "1" && !formData.newCategory.trim()) ||
+                (formData.visibility === "family" && families.length > 1 && !formData.familyId)
               }
               onClick={handleSubmit}
             >

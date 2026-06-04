@@ -12,6 +12,8 @@ import {
   Paperclip,
   ExternalLink,
   History,
+  Globe,
+  Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteTemplate, useTemplates, useUpdateTemplate } from "../../hooks/useTemplates";
@@ -34,6 +36,8 @@ const Template = ({
   onUnpin,
   imageUrl,
   fileUrl,
+  visibility = "public",
+  family_name,
 }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -175,6 +179,24 @@ const Template = ({
             <span className="badge badge-ghost badge-sm text-primary/70 border-primary/20 shrink-0 hidden sm:inline-flex">
               {category}
             </span>
+            {visibility === "family" ? (
+              <span
+                className="badge badge-sm gap-1 bg-secondary/10 text-secondary border-secondary/20 shrink-0 hidden sm:inline-flex"
+                title={family_name ? `Family: ${family_name}` : "Family only"}
+              >
+                <Users className="w-2.5 h-2.5" />
+                <span className="hidden lg:inline max-w-[80px] truncate">
+                  {family_name || "Family"}
+                </span>
+              </span>
+            ) : (
+              <span
+                className="badge badge-sm gap-1 bg-base-200 text-base-content/30 border-transparent shrink-0 hidden xl:inline-flex"
+                title="Public"
+              >
+                <Globe className="w-2.5 h-2.5" />
+              </span>
+            )}
             <ChevronDown
               className={`w-4 h-4 text-base-content/40 shrink-0 transition-transform duration-200 ${
                 isOpen ? "rotate-180" : "rotate-0"

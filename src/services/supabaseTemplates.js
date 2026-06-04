@@ -1,13 +1,32 @@
 import supabase from "./supabase.js";
 
 export const supabaseTemplatesAPI = {
-  // Get all templates
+  // Get all templates visible to the current user
   getAll: async () => {
-    const { data, error } = await supabase
-      .from("templates")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
+    let familyIds = [];
+    if (user) {
+      const { data: memberships } = await supabase
+        .from("family_members")
+        .select("family_id")
+        .eq("user_id", user.id);
+      familyIds = (memberships || []).map((m) => m.family_id);
+    }
+
+    let query = supabase.from("templates").select("*");
+
+    if (familyIds.length > 0) {
+      query = query.or(
+        `visibility.eq.public,and(visibility.eq.family,family_id.in.(${familyIds.join(",")}))`
+      );
+    } else {
+      query = query.eq("visibility", "public");
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data;
   },
@@ -46,6 +65,9 @@ export const supabaseTemplatesAPI = {
           category: templateData.category,
           image_url: templateData.imageUrl || null,
           file_url: templateData.fileUrl || null,
+          visibility: templateData.visibility || "public",
+          family_id: templateData.familyId || null,
+          family_name: templateData.familyName || null,
         },
       ])
       .select()
