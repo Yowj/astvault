@@ -8,7 +8,7 @@ const useLogin = () => {
   const { mutate, isPending, error } = useMutation({
     mutationFn: signIn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      queryClient.invalidateQueries();
       toast.success("Logged in successfully");
     },
     onError: (error) => {
@@ -16,10 +16,10 @@ const useLogin = () => {
     },
   });
 
-  return { 
-    loginMutation: mutate, 
-    isPending, 
-    error 
+  return {
+    loginMutation: mutate,
+    isPending,
+    error,
   };
 };
 

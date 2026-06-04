@@ -6,7 +6,6 @@ export const useUserFamilies = () => {
   const query = useQuery({
     queryKey: ["families"],
     queryFn: supabaseFamiliesAPI.getUserFamilies,
-    staleTime: 1000 * 60 * 3,
   });
 
   return {
@@ -21,7 +20,6 @@ export const useFamilyMembers = (familyId) => {
     queryKey: ["family-members", familyId],
     queryFn: () => supabaseFamiliesAPI.getFamilyMembers(familyId),
     enabled: !!familyId,
-    staleTime: 1000 * 60 * 2,
   });
 
   return {

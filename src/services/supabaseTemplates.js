@@ -27,7 +27,18 @@ export const supabaseTemplatesAPI = {
     }
 
     const { data, error } = await query.order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+
+    // Fallback: if visibility column doesn't exist yet (SQL migration not run),
+    // return all templates without the visibility filter.
+    if (error) {
+      const { data: fallback, error: fallbackError } = await supabase
+        .from("templates")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (fallbackError) throw new Error(fallbackError.message);
+      return fallback;
+    }
+
     return data;
   },
 

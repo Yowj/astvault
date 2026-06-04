@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Plus, KeyRound, Settings, Crown, User } from "lucide-react";
+import { Users, Plus, KeyRound, Settings, Crown, User, HelpCircle, Globe } from "lucide-react";
 import { useUserFamilies } from "../hooks/useFamilies";
 import CreateFamilyModal from "../components/families/CreateFamilyModal";
 import JoinFamilyModal from "../components/families/JoinFamilyModal";
@@ -42,6 +42,8 @@ const FamiliesPage = () => {
           </button>
         </div>
       </div>
+
+      <HowFamiliesWork />
 
       {/* Family Cards */}
       {familiesIsPending ? (
@@ -144,5 +146,36 @@ const FamilyCard = ({ family, onManage }) => {
     </div>
   );
 };
+
+const HowFamiliesWork = () => (
+  <details className="collapse collapse-arrow bg-base-200 border border-base-300 rounded-xl">
+    <summary className="collapse-title text-sm font-semibold min-h-0 py-3 px-4">
+      <span className="flex items-center gap-2">
+        <HelpCircle className="w-4 h-4 text-primary shrink-0" />
+        How families work
+      </span>
+    </summary>
+    <div className="collapse-content">
+      <ul className="space-y-2.5 text-sm text-base-content/70 pt-1">
+        <li className="flex items-start gap-2">
+          <Plus className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Create a family — give it a name and a unique invite code is generated automatically</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <KeyRound className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Share the invite code with anyone you want in your group — they enter it to join</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Users className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Members can see each other's "Family only" templates on the Home page</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Globe className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>"Public" templates remain visible to all users regardless of family membership</span>
+        </li>
+      </ul>
+    </div>
+  </details>
+);
 
 export default FamiliesPage;

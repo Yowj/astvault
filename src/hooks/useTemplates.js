@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabaseTemplatesAPI } from '../services';
+import { supabaseTemplatesAPI } from "../services";
 import toast from "react-hot-toast";
 
 export const useTemplates = () => {
@@ -49,10 +49,10 @@ export const useCreateTemplate = () => {
     },
   });
 
-  return { 
-    createTemplateMutate: mutate, 
-    createTemplateIsPending: isPending, 
-    createTemplateError: error 
+  return {
+    createTemplateMutate: mutate,
+    createTemplateIsPending: isPending,
+    createTemplateError: error,
   };
 };
 
@@ -71,10 +71,10 @@ export const useUpdateTemplate = () => {
     },
   });
 
-  return { 
-    updateTemplateMutate: mutate, 
-    updateTemplateIsPending: isPending, 
-    updateTemplateError: error 
+  return {
+    updateTemplateMutate: mutate,
+    updateTemplateIsPending: isPending,
+    updateTemplateError: error,
   };
 };
 
@@ -92,10 +92,10 @@ export const useDeleteTemplate = () => {
     },
   });
 
-  return { 
-    deleteTemplateMutate: mutate, 
-    deleteTemplateIsPending: isPending, 
-    deleteTemplateError: error 
+  return {
+    deleteTemplateMutate: mutate,
+    deleteTemplateIsPending: isPending,
+    deleteTemplateError: error,
   };
 };
 
@@ -125,10 +125,10 @@ export const useAskAI = () => {
     },
   });
 
-  return { 
-    askAIMutate: mutate, 
-    askAIIsPending: isPending, 
-    askAIError: error 
+  return {
+    askAIMutate: mutate,
+    askAIIsPending: isPending,
+    askAIError: error,
   };
 };
 
@@ -143,9 +143,9 @@ export const useGrammarEnhance = () => {
     },
   });
 
-  return { 
-    grammarEnhanceMutate: mutate, 
-    grammarEnhanceIsPending: isPending, 
-    grammarEnhanceError: error 
+  return {
+    grammarEnhanceMutate: mutate,
+    grammarEnhanceIsPending: isPending,
+    grammarEnhanceError: error,
   };
 };

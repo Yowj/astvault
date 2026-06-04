@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Globe, Users } from "lucide-react";
+import { Globe, Users, HelpCircle, Copy, Pin, Plus } from "lucide-react";
 import { useTemplates } from "../hooks/useTemplates";
 import { usePins, usePinTemplate, useUnpinTemplate } from "../hooks/usePins";
 import { usePagination } from "../hooks/usePagination";
@@ -102,6 +102,10 @@ const Home = () => {
 
         <main className="flex flex-col justify-between flex-1 p-2 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
           <div className="flex-1 space-y-3 sm:space-y-4 min-h-0">
+            <div className="flex-shrink-0 lg:hidden">
+              <HowTemplatesWork />
+            </div>
+
             <div className="flex-shrink-0">
               <SearchBar
                 searchTerm={filters.searchTerm}
@@ -183,6 +187,7 @@ const DesktopSidebar = ({ onClearFilters, onCreateClick, categories, selectedCat
       selectedCategory={selectedCategory}
       onCategoryChange={onCategoryChange}
     />
+    <HowTemplatesWork />
   </aside>
 );
 
@@ -205,6 +210,41 @@ const MobileHeader = ({ onClearFilters, onCreateClick, categories, selectedCateg
       mobile
     />
   </div>
+);
+
+const HowTemplatesWork = () => (
+  <details className="collapse collapse-arrow bg-base-200 border border-base-300 rounded-xl">
+    <summary className="collapse-title text-sm font-semibold min-h-0 py-3 px-4">
+      <span className="flex items-center gap-2">
+        <HelpCircle className="w-4 h-4 text-primary shrink-0" />
+        How it works
+      </span>
+    </summary>
+    <div className="collapse-content">
+      <ul className="space-y-2.5 text-sm text-base-content/70 pt-1">
+        <li className="flex items-start gap-2">
+          <Copy className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Copy a template's content to your clipboard with one click</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Pin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Pin templates to your sidebar for quick access</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Plus className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Create your own — pick a title, category, and write the content</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Globe className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Public templates are visible to everyone on the app</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <Users className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+          <span>Family-only templates are visible only to members of that family</span>
+        </li>
+      </ul>
+    </div>
+  </details>
 );
 
 export default Home;
